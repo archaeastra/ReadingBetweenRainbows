@@ -83,7 +83,8 @@ for f in sims:
         
         hic.PareDown(ax["B"], (0.65,0.95))
 
-        #fig.savefig("./{0:s}-{1:s}_IndivID.png".format(f, pans[i]), bbox_inches="tight", dpi=600)
+        #fig.savefig("./Output(Auto)/{0:s}-{1:s}_IndivID.png".format(f, pans[i]), bbox_inches="tight", dpi=600)
+        #Use this when mass-producing Degrade plots to save them all in a separate  directory.
  
         plt.show()
 print("Program Conclusion, check figures!")
