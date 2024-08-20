@@ -36,7 +36,7 @@ Ouput looks like the following:
 
 **RunDBSMatrix.py**
 
-RunDBSMatrix.py produces RBR Figure 4. No edits are necessary, but beware of validity "Divide by 0" errors. They are, for the most part, inconsequential but may be indicative of unhealthy data distributions
+RunDBSMatrix.py produces RBR Figure 4. No edits are necessary, but beware of validity "Divide by 0" errors. They are, for the most part, inconsequential but may be indicative of unhealthy data distributions.
 Ouput looks like the following:
 > [!WARNING]
 > Image Not Ready Yet
