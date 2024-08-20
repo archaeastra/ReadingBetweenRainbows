@@ -25,4 +25,16 @@ IndivID.py produces Figure 1 in RBR, as well as similar graphs for all atmophere
 > [!WARNING]
 > Image Not Ready Yet
 
+**RunDBS.py**
 
+RunDBS.py produces the individual panels in RBR Figure 5. Manual edits to the code are require to change molecule, please mind the comments for instructions.
+Ouput looks like the following:
+> [!WARNING]
+> Image Not Ready Yet
+
+**RatioDBS.py**
+
+RatioDBS.py produces Figure 7 in RBR. No edits are necessary.
+Ouput looks like the following:
+> [!WARNING]
+> Image Not Ready Yet
