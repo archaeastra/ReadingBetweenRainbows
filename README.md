@@ -4,6 +4,8 @@ Reading Between Rainbows (RBR) gathers all the code necessary to reproduce the f
 
 All code uses the HicSunt custom function library, which has the following dependencies:
 - astropy.io.fits
+- [CMasher](https://cmasher.readthedocs.io/index.html)
+- [DBCV]([https://pages.github.com/](https://github.com/christopherjenness/DBCV))
 - matplotlib.pyplot
 - numpy
 - sklearn.cluster.HDBSCAN
