@@ -25,6 +25,13 @@ IndivID.py produces Figure 1 in RBR, as well as similar graphs for all atmophere
 > [!WARNING]
 > Image Not Ready Yet
 
+**RunDBSMatrix.py**
+
+RunDBS.py produces RBR Figure 4. No edits are necessary, but beware of validity "Divide by 0" errors. They are, for the most part, inconsequential but may be indicative of unhealthy data distributions
+Ouput looks like the following:
+> [!WARNING]
+> Image Not Ready Yet
+
 **RunDBS.py**
 
 RunDBS.py produces the individual panels in RBR Figure 5. Manual edits to the code are require to change molecule, please mind the comments for instructions.
