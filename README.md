@@ -16,6 +16,7 @@ All code uses the HicSunt custom function library, which has the following depen
 
 > [!NOTE]
 > Reproducing RBR figures requires the presence of `.atl` files in the appropriate file structure shown below:
+
 > [!WARNING]
 > Tree Not Ready Yet
 
