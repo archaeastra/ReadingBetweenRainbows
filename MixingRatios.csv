@@ -1,10 +1,10 @@
    Star       Type    Atmosphere T (K)      Flux (S_earSemMaj (mAUR (R_earth)Pressure(baO2         H2O        CO         CO2        O3         N2         N2 CALC    CH4        Source     
 AD Leo     M          Archean            310        0.8       1000          1          1   1.00E-08   3.89E-03   1.78E-04   1.01E-02          0          0   9.84E-01   2.02E-03Arney 2017 
 AD Leo     M          Arch.Haze          317        0.8       1000          1          1   1.00E-08   3.89E-03   1.78E-04   1.01E-02          0          0   9.84E-01   2.02E-03Arney 2017 
-AD Leo     M          E-type                                                               8.72E-03   1.00E-02   1.05E-02   4.85E-02   0.00E+00   8.97E-01   9.22E-01   4.37E-04Schwieterma
-Modern Sol G          Earth                           1                     1          1   2.10E-01   1.00E-04   0.00E+00   3.85E-04   1.00E-05   7.81E-01   7.90E-01   1.82E-06Lustig-Yaeg
+AD Leo     M          E-type             298          1       1000          1          1   8.72E-03   1.00E-02   1.05E-02   4.85E-02   0.00E+00   8.97E-01   9.22E-01   4.37E-04Schwieterma
+Modern Sol G          Earth              298          1       1000          1          1   2.10E-01   1.00E-04   0.00E+00   3.85E-04   1.00E-05   7.81E-01   7.90E-01   1.82E-06Lustig-Yaeg
 Modern Sol G          Archean            272        0.8       1000          1          1   1.00E-08   3.89E-03   1.78E-04   1.01E-02          0          0   9.84E-01   2.02E-03Arney 2017 
-Archean SolG          Archean                                                              1.00E-08   3.89E-03   1.78E-04   1.01E-02          0          0   9.84E-01   2.02E-03
+Archean SolG          Archean            298          1       1000          1          1   1.00E-08   3.89E-03   1.78E-04   1.01E-02          0          0   9.84E-01   2.02E-03
 Archean SolG          Arch.Haze          299        0.8       1000          1          1   1.00E-08   3.89E-03   1.78E-04   1.01E-02          0          0   9.84E-01   2.02E-03Arney 2017 
 Epsilon EriK2         Archean            297        0.8       1000          1          1   1.00E-08   3.89E-03   1.78E-04   1.01E-02          0          0   9.84E-01   2.02E-03Arney 2017 
 Epsilon EriK2         Arch.Haze          282        0.8       1000          1          1   1.00E-08   3.89E-03   1.78E-04   1.01E-02          0          0   9.84E-01   2.02E-03Arney 2017 
