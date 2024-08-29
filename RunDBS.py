@@ -17,7 +17,7 @@ WHAT THIS NEDS TO DO:
 nbands=10
 bands=hic.Bandwidth((5,12), nbands) #1 to 5.3 for NIRSPEC
 subres=300
-tray, sims=hic.TrayTable("C:/Users/Lyan/StAtmos/HSD/Test/VPL Transits", bands, subres, win=(5,12)) #1 to 5.3 for NIRSPEC 
+tray, sims=hic.TrayTable("[YOUR LOCAL PATH HERE]/VPL Transits", bands, subres, win=(5,12)) #1 to 5.3 for NIRSPEC 
 
 ##Input
 desiredX=2
