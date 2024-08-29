@@ -18,7 +18,7 @@ maxp=400
 
 try:
     print("Pulling...")
-    pull = np.genfromtxt("C:/Users/Lyan/StAtmos/HSD/HRD Star Data/hyglike_from_athyg_24.csv", 
+    pull = np.genfromtxt("[LOCATION OF STAR DATA FILE]", 
                          dtype='float', delimiter=',', usecols=(14, 16), skip_header=1, max_rows=maxp, 
                          invalid_raise=False)
 except:
