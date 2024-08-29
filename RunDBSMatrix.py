@@ -17,7 +17,7 @@ bands=hic.Bandwidth((1,5.3), nbands)
 subres=407
 
 #UPLOAD TABLE
-tray, sims=hic.TrayTable("C:/Users/Lyan/StAtmos/HSD/Test/VPL Transits", bands, subres, win=(1,5.3))
+tray, sims=hic.TrayTable("[YOUR LOCAL PATH HERE]/VPL Transits", bands, subres, win=(1,5.3))
 #Pull in the Tray
 
 fig, ax = plt.subplots(nbands,nbands, subplot_kw=dict(box_aspect=1));
