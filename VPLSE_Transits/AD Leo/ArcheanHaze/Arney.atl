@@ -1,0 +1,14 @@
+#Name		Value
+Temperature	298
+Flux(S_e)	1
+SemMaj(mAU)	1000
+R(R_e)		1
+SurfPres(Pa)	1E0
+# Species Concentrations (Arney Archeans)
+O2	1.00E-08
+H2O	3.98E-03
+CO	1.78E-04
+CO2	1.01E-2
+O3	0
+N2	9.84E-01
+CH4	2.02E-3
