@@ -1,0 +1,8 @@
+Index of VPLSE transits gathered here
+Coming Soon
+
+Basic File Structure:
+- Transit Data
+``./[Star Name]/[Atmosphere Type]/[spec].trn``
+- Planet Metadata
+``./[Star Name]/[Atmosphere Type]/[source].atl``
