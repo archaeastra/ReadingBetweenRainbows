@@ -7,7 +7,7 @@ The key components are the ``.trn`` and ``.atl`` files, anything else in this fi
 > Multiple ``.trn`` or ``.atl`` instances in a single end directory will cause errors. Do not do this.
 
 Basic Sructure
-- Transit Data
+- Transit Data:
 ``./[Star Name]/[Atmosphere Type]/[spec].trn``
-- Planet Metadata
+- Planet Metadata:
 ``./[Star Name]/[Atmosphere Type]/[source].atl``
