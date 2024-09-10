@@ -1,0 +1,14 @@
+#Name		Value
+Temperature	298
+Flux(S_e)	1
+SemMaj(mAU)	1000
+R(R_e)		1
+SurfPres(Pa)	1E0
+# Species Concentrations
+O2	2.10E-1
+H2O	1E-4
+CO	0
+CO2	3.85E-4
+O3	1E-5
+N2	7.81E-1
+CH4	1.82E-6
