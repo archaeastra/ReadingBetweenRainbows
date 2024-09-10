@@ -3,7 +3,7 @@ This file contains part of the RBR data, enough to show off the basic structure 
 
 The key components are the ``.trn`` and ``.atl`` files, anything else in this filetree will be safely ignored by RBR code.
 
-!WARNING 
+> [!WARNING]
 > Multiple ``.trn`` or ``.atl`` instances in a single end directory will cause errors. Do not do this.
 
 Basic Sructure
