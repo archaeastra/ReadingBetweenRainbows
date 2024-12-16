@@ -3,6 +3,7 @@ from astropy.io import fits
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import re
 from sklearn.cluster import HDBSCAN
 from sklearn.preprocessing import RobustScaler
 from scipy.spatial import ConvexHull
@@ -12,9 +13,17 @@ from scipy import fft as sft
 
 ##CONSTANTS
 types  = ['Error', 'Unknown', 'Archean', 'ArcheanHaze', 'E-type', 'ModernEarth', 'DryO2', 'WetO2', 'CO2', 'V-type']
-#Note, unless Earth is Planet, Earth label is "earth-like"
-colours = ['r', 'k', 'Firebrick', 'Maroon','Navy', 'b', 'SlateBlue', 'DodgerBlue', 'DarkKhaki', 'LimeGreen']
+colours = ['r', 'Magenta', 'Firebrick', 'Maroon','Navy', 'b', 'SlateBlue', 'DodgerBlue', 'DarkKhaki', 'LimeGreen']
 markers = ['.', '+', 'x', '*']
+
+traycols = ["Temperature (K)", "Flux (S$_{e}$)", "Semi-Major Axis (mAU)", "Radius (R$_{e}$)", "Pressure (Pa)", 
+            "O$_{2}$ ", "H$_{2}$O", "CO", "CO$_{2}$", "O$_{3}$", "N$_{2}$", "CH$_{4}$", 
+            "O$_{2}$/CO$_{2}$", "H$_{2}O$/CO$_{2}$"]
+gcl = [("plasma", 0.1, 0.8), ("cmr.sepia", 0.2, 1), ("RdBu", 0.2, 0.8), ("cmr.emergency", 0.2, 0.8), ("cmr.voltage", 0.1, 0.8),
+                ("cmr.sapphire_r", 0.1, 0.8), ("cmr.ocean_r", 0.2, 0.8), ("cmr.fall_r", 0.1, 0.8), ("pink_r", 0.2, 1),
+                ("GnBu_r", 0.1, 0.8), ("cmr.swamp_r", 0.1, 0.8), ("cmr.neutral_r", 0.1, 0.8), ("cmr.iceburn_r", 0, 1),
+                ("cmr.voltage", 0.1, 0.8)]
+
 
 ##DATA ROUTINES
 #This one is only still here for backwards compatitibility with my older code
@@ -79,6 +88,7 @@ def Extract3D(path, col, ext):
         #print(os.getcwd())        
         for l in os.listdir('.'):
             if l[-4:] == str(ext):
+                #print(l)
                 spectrum='./'+str(l)
             if l[-4:] == str('.atl'):
                 stats = './'+str(l)
@@ -113,20 +123,13 @@ def Barcode(pan):
     #z=0, values
     #z=1, planet type
     #z=2, haze indicator.
-    #Note, unless Earth is Planet, Earth label is "earth-like"
     if str(pan) in types: 
         code= types.index(str(pan))
     else:
         #1 is used for "spare" values that aren't part of the pre-determined dataset.
         #0 is not used to avoid issues with floats. A 0 value is an error and should be treated as such.
         code=1
-    """
-    if str(pan).find("Haze")!=-1:
-        #A simple binary value for the presence of haze or not.
-        haze=1
-    else:
-        haze=0#"""
-    return(code)#, haze)
+    return(code)
 
 def TrayTable(path, bands, subres=None, win=(5,12)):
     # 0 = Temperature, 1 = Flux, 2 = Semi-major Axis, 3 = Radius, 4+: individual gas concentrations (rough)
@@ -149,7 +152,7 @@ def TrayTable(path, bands, subres=None, win=(5,12)):
         for i in range(0,len(pans)):
             A0=Normalise(tot[i,0][0])
             x0=tot[i,0][1]
-            A, x = Unresolve(A0, x0, win, subres)
+            A, x, h = Unresolve(A0, x0, win, subres)
             try:
                 hold[:,1,i]=tot[i,1]
             except IndexError:
@@ -221,13 +224,13 @@ def Normalise(y):
     return(y)
 
 def Recut(x,step=300):
-    #print(len(x))
+    #print("OG: ", len(x))
     gap=len(x)/step
     #print(gap)
     newx=[]
     for i in range(0, step):
         newx.append(x[round(gap*i)])
-    #print(len(newx))
+    #print("New: ",len(newx))
     return(newx) 
  
 
@@ -264,17 +267,32 @@ def Bandwidth(spec, nbands):
     return(bands)    
 
 def Unresolve(iny, inx, win=(5,12), subres=None):
-        #win is the window, defaults to 5-12 as weve been doing before with MIRI
+        #win is the window, defaults to 5-12 as we've been doing before with MIRI
         A=Normalise(iny)
         x=inx
         ya, xa = Window(x, A, (win[0], win[1]))
-        if subres!=None:
+        if subres!=None and len(xa)-1>subres:
             F = Normalise(Smooth(ya, 0, subres, rev=True).real)
             newx=Recut(xa, subres)
-        else:
+            #print("{0}<{1}".format(subres, len(xa)-1))
+            health=1
+        elif subres==None:
+            #print("subres=None".format(subres, len(xa)-1))
             F=ya
+            newx=xa            
+            health=1
+        else:
+            print("{0}>={1}. Defaulting to full.".format(subres, len(xa)-1))
+            F=Normalise(ya)
             newx=xa
-        return(F, newx)
+            health=0
+        return(F, newx, health)
+
+def MRS_R(wvl):
+    wvl=np.array(wvl)
+    R=4603-128*wvl-10**(-7.4*wvl)
+    return(R)
+
 
 ## PLOTTING ROUTINES
 def PareDown(ax, tup):
@@ -349,3 +367,8 @@ def DrawContour(xy, col, plot=True):
             plt.fill(interp_x, interp_y, '--', c=col, alpha=0.2) 
         else:
             return(interp_x, interp_y)
+
+def StripAlnum(str):
+    #used to create nice labels using the lists in the Constants section
+    fl=re.sub(r'[^a-zA-Z0-9]', "", str)
+    return(fl)
