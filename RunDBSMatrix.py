@@ -4,6 +4,7 @@ import HicSunt as hic
 from sklearn.cluster import HDBSCAN
 from sklearn.preprocessing import RobustScaler
 import DBCV as valid
+import string
 
 """
 WHAT THIS NEEDS TO DO:
@@ -12,12 +13,13 @@ WHAT THIS NEEDS TO DO:
 - plot
 """
 #DEFINITIONS
-nbands=5
-bands=hic.Bandwidth((1,5.3), nbands)
-subres=407
+nbands=10
+win=(5,12)
+bands=hic.Bandwidth(win, nbands)
+subres=933
 
 #UPLOAD TABLE
-tray, sims=hic.TrayTable("[YOUR LOCAL PATH HERE]/VPL Transits", bands, subres, win=(1,5.3))
+tray, sims=hic.TrayTable("[YOUR LOCAL PATH HERE]/VPL Transits", bands, subres, win)
 #Pull in the Tray
 
 fig, ax = plt.subplots(nbands,nbands, subplot_kw=dict(box_aspect=1));
@@ -28,13 +30,17 @@ fig.suptitle("VPL Transits - Clustered Integration Bands");
 validity=np.zeros((nbands, nbands,2), dtype='float')
 
 for l in range(0,nbands):
+    ax[l,0].set_ylabel("{0:.1f}-\n{1:.1f} $um$".format(bands[l][0], bands[l][1], fontsize=4));
+    ax[l,nbands-1].yaxis.set_label_position("right")
+    ax[l,nbands-1].set_ylabel(list(string.ascii_uppercase)[l], fontsize=15, rotation=0, labelpad=10)
     for m in range(0,nbands):
-        ax[l,0].set_ylabel("{0:.1f}-\n{1:.1f} $um$".format(bands[l][0], bands[l][1], fontsize=4));
-        ax[nbands-1,m].set_xlabel("{0:.1f}-\n{1:.1f} $um$".format(bands[m][0], bands[m][1], fontsize=4));
+        ax[nbands-1,m].set_xlabel("{0:.1f}-\n{1:.1f} $um$".format(bands[m][0], bands[m][1], fontsize=4));    
+        ax[0,m].tick_params(top=True, labeltop=True, bottom=False, labelbottom=False)
+        ax[0,m].set_title(m, fontsize=15)
+        
         clr='k'
         ax[l, m].set_xticks([])
         ax[l, m].set_yticks([])
-
 
         if l<=m:
             ax[l,m].set_facecolor('k')
@@ -60,9 +66,11 @@ for l in range(0,nbands):
                 ax[l,m].scatter(vals[w,0],vals[w, 1], s=15,
                                 c=hic.colours[z], marker=hic.markers[z%(len(hic.markers))], zorder=11-z)
             tempe=['Magenta', 'Lime']
+            """
+            #This section includes real data, if available, which it currently doesn't.
             for obs in range(0,np.shape(RL)[2]):
                 for nt in range(0,np.shape(RL)[1]):
-                    ax[l,m].scatter(RL[m, nt, obs], RL[l, nt, obs], s=obs+10, c=tempe[obs], zorder=11, alpha=0.25)
+                    ax[l,m].scatter(RL[m, nt, obs], RL[l, nt, obs], s=obs+10, c=tempe[obs], zorder=11, alpha=0.25)#"""
                 
             #Running DBSCAN
             #Note: eps is the maximum distance between points to consider them in a group
@@ -107,11 +115,10 @@ for l in range(0,nbands):
                 #print("NaN found. Setting to 0.")
                 validity[l,m,0]=1
             validity[l,m,1]=(nrat/vals.shape[0])*100
-
-fig.text(x=0.5, y=0.94, s= "Average DBCV: {0:.4f}".format(np.average(validity[:,:,0])), fontsize=8, ha="center")    
-fig.text(x=0.5, y=0.92, s= "Average Noise Ratio: {0:.2f}%".format(np.average(validity[:,:,1])), fontsize=8, ha="center")
-
-#The above is can be safely commented out if it is unnecessary or causing error.
+        #Pull out valid cells for later analysis, human oversight necessary, just in case.
+        if -0.4<validity[l,m,0]<0.15 and validity[l,m,1]<10 and l>m:
+            print(l,m,str("({2}{3}) DBCV {0:.2f}, NR {1:.2f}".format(validity[l,m,0],validity[l,m,1], list(string.ascii_uppercase)[l], m)))
+ 
 fig.text(x=0.88, y=0.92, s= "P{0:.0f}% C{1:.0f}% E{2:.1f}".format(mpts*100, mcls*100, neareps), fontsize=8, ha="right")    
 fig.text(x=0.12, y=0.92, s= "Signal Reduction: {0}".format(subres), fontsize=8, ha="left")    
 #hic.PareDown(ax[2,0], (3,3))  #This creates the legend.
