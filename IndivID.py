@@ -103,7 +103,7 @@ for f in sims:
         for b, col in zip(bands, color):
             plt.axvspan(b[0], b[1], color=col, alpha=1)#0.3)#"""
         
-               ax["A"].annotate('a)',xy=(0, 1), xycoords='axes fraction', xytext=(+0.5, -0.5), 
+        ax["A"].annotate('a)',xy=(0, 1), xycoords='axes fraction', xytext=(+0.5, -0.5), 
                  textcoords='offset fontsize', fontsize=16, verticalalignment='top')
         ax["B"].annotate('b)',xy=(0, 1), xycoords='axes fraction', xytext=(+0.5, -0.5), 
                  textcoords='offset fontsize', fontsize=16, verticalalignment='top')
