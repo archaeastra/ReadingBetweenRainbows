@@ -1,8 +1,10 @@
-import numpy as np
 import os
 import matplotlib.pyplot as plt
 import HicSunt as hic
+from matplotlib.ticker import FuncFormatter
+#Used for Bandplot
 import cmasher as cmr
+import numpy as np
 
 """
 WHAT THIS DOES:
@@ -26,7 +28,9 @@ def SpeedPlot(sub, label=None, clr='k', marker='*'):
     ax[str(sub[2])].plot(x[2], y[2], label=label, c=clr); #Used for Degrade
     ax[str(sub[3])].plot(x[3], y[3], label=label, c=clr); #Used for Degrade
 #This definition exists to avoid repeating code.
-    
+def format_axis(x, pos):
+    return(f'{x/1e-4:.2f}') #Doesn't put the 10^-4 at the top make that happen    
+
 #MAIN CODE
 path = "[Your Local Path Here]/VPL Transits"
 
@@ -42,26 +46,35 @@ for f in sims:
     print("Current Position: ", f)
     for i in range(len(pans)):
         fig, ax = plt.subplot_mosaic("A;B;C;D")
-        fig.set_size_inches(8,8);
+        fig.set_size_inches(6,6);
         fig.tight_layout(pad=4, w_pad=4);
-        fig.suptitle("VPL Transits - {0:s}".format(f), fontsize=12);
-        plt.subplots_adjust(top=0.898,
-                            bottom=0.132,
-                            left=0.127,
-                            right=0.902,
-                            hspace=0.452,
+        #fig.suptitle("VPL Transits - {0:s}".format(f), fontsize=12);
+        plt.subplots_adjust(top=0.979,
+                            bottom=0.082,
+                            left=0.139,
+                            right=0.98,
+                            hspace=0.118,
                             wspace=0.172)
-        ax["A"].set_ylabel("Normalised Flux $(Jy)$", fontsize=10);
-        ax["B"].set_xlabel("Wavelength $um$", fontsize=10);      
-        ax["B"].set_ylabel("Fourier Smoothed NF \n$(Jy)$ Sub 300", fontsize=8);
-        ax["C"].set_ylabel("Fourier Smoothed NF \n$(Jy)$ Sub 100", fontsize=8);
-        ax["D"].set_ylabel("Fourier Smoothed NF \n$(Jy)$ Sub 50", fontsize=8);
         
-        A=hic.Normalise(tot[i,0][0])
+        ax["A"].set_ylabel("Transit Depth \n (Rp/Rs)$^{2}$ (10$^{-4}$)", fontsize=10);
+        ax["A"].yaxis.set_major_formatter(FuncFormatter(format_axis))
+        #ax["A"].set_xlabel("Wavelength $um$", fontsize=10);      
+        ax["B"].set_ylabel("Fourier Smoothed \n Normalised TD \n R~1250", fontsize=8);
+        ax["C"].set_ylabel("Fourier Smoothed NTD \n R~300", fontsize=8);
+        ax["D"].set_ylabel("Fourier Smoothed NTD \n R~60", fontsize=8);
+        #"""
+        ax["A"].set_xticks([])
+        ax["B"].set_xticks([])
+        ax["C"].set_xticks([])        
+        ax["D"].set_xlabel("Wavelength ($\mu$m)", fontsize=10);#"""      
+        
+        #A=hic.Normalise(tot[i,0][0]) #Remember, this permanently alters the array!! Comment out if desire raw
         x=tot[i,0][1]   
-        small=min(x)
-        win=(5, 12)  #Make sure this is set correctly, (5,12) is the MIRI-like window. (1,5.3) is the NIRSPEC-lik window.
-        ya, xa = hic.Window(x, A, win)
+        win=(1, 5.3)  #Make sure this is set correctly.
+        ##WINDOWS
+        #MIRI 5-12 NIRSPEC 1-5.3 | ECLIPS_NIR 1-2 _VIS 0.515-1.03  _NUV 0.2-0.5125
+        #ya, xa = hic.Window(x, A, win)
+        rya, rxa=hic.Window(x, tot[i,0][0], win)
         
         F,newx=hic.Unresolve(tot[i,0][0],tot[i,0][1], win, 300)  #Maximum without being Full. MIRIM MRS is 2k-3k
         FA,newxA=hic.Unresolve(tot[i,0][0],tot[i,0][1], win, 100) #Middle Ground
@@ -69,9 +82,18 @@ for f in sims:
         
         z = tot[i,1]
         z=int(z)
-        SpeedPlot(["A","B","C","D"], label=hic.types[z], clr=hic.colours[z]) #Used for Degrade
+        #SpeedPlot(["A","B","C","D"], label=hic.types[z], clr=hic.colours[z]) #Used for Degrade
         #SpeedPlot(["A","B"], label=hic.types[z], clr=hic.colours[z]) #Used for BandPlot.
         
+        #"""
+        mosaic = ["A","B","C","D"]
+        x = [rxa, newx, newxA, newxB]
+        y= [rya, F, FA, FB]
+        h = [1, h1, h2, h3]
+        for p in mosaic:
+            ax[str(p)].plot(x[mosaic.index(p)], y[mosaic.index(p)], label=hic.types[z], c=hic.colours[z] if int(h[mosaic.index(p)])==1 else 'k')
+            #ax[str(p)].set_xlim(*win)#"""
+      
         """      #Used for Bandplot.
         nbands=5
         bands=hic.Bandwidth((5,12), nbands)
@@ -81,10 +103,20 @@ for f in sims:
         for b, col in zip(bands, color):
             plt.axvspan(b[0], b[1], color=col, alpha=1)#0.3)#"""
         
-        hic.PareDown(ax["B"], (0.65,0.95))
-
-        #fig.savefig("./Output(Auto)/{0:s}-{1:s}_IndivID.png".format(f, pans[i]), bbox_inches="tight", dpi=600)
-        #Use this when mass-producing Degrade plots to save them all in a separate  directory.
- 
-        plt.show()
+               ax["A"].annotate('a)',xy=(0, 1), xycoords='axes fraction', xytext=(+0.5, -0.5), 
+                 textcoords='offset fontsize', fontsize=16, verticalalignment='top')
+        ax["B"].annotate('b)',xy=(0, 1), xycoords='axes fraction', xytext=(+0.5, -0.5), 
+                 textcoords='offset fontsize', fontsize=16, verticalalignment='top')
+        #"""
+        ax["C"].annotate('c)',xy=(0, 1), xycoords='axes fraction', xytext=(+0.5, -0.5), 
+                 textcoords='offset fontsize', fontsize=16, verticalalignment='top')
+        ax["D"].annotate('d)',xy=(0, 1), xycoords='axes fraction', xytext=(+0.5, -0.5), 
+                 textcoords='offset fontsize', fontsize=16, verticalalignment='top')#"""
+        
+        #hic.PareDown(ax["A"], (0.65,0.95))
+        
+        fig.savefig("C:/Users/Lyan/StAtmos/HSD/Plots/Indiv/FourierAuto/1000/{0:s}-{1:s}_catch.png".format(f, pans[i]), bbox_inches="tight", dpi=600)
+    
+        #plt.show()
+        plt.close()
 print("Program Conclusion, check figures!")
