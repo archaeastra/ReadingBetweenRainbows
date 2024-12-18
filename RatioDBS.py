@@ -14,10 +14,13 @@ WHAT THIS DOES:
 """
 #UPLOAD TABLE
 nbands=10
-bands=hic.Bandwidth((5,12), nbands) #1 to 5.3 for NIRSPEC
+win=(1, 5.3)  #Make sure this is set correctly.
+##WINDOWS
+#MIRI 5-12 NIRSPEC 1-5.3 | ECLIPS_NIR 1-2 _VIS 0.515-1.03  _NUV 0.2-0.5125
+bands=hic.Bandwidth(win, nbands)
 
-subres=300
-tray, sims=hic.TrayTable("[YOUR LOCAL PATH HERE]/VPL Transits", bands, subres, win=(5,12)) #1 to 5.3 for NIRSPEC
+subres=1000
+tray, sims=hic.TrayTable("[YOUR LOCAL PATH HERE]/VPL Transits", bands, subres, win) #1 to 5.3 for NIRSPEC
 
 ##Input
 XA=6
@@ -40,7 +43,7 @@ for s in range(0,len(tray)):
         horiA.append(tray[s][XA,0,t]) 
         vertB.append(tray[s][YB,0,t]) 
         horiB.append(tray[s][XB,0,t]) 
-        zmark.append(tray[s][0,1,t]) #x can be anything here, they're all the same per collumn.
+        zmark.append(tray[s][0,1,t])
         sim.append(s)
         T.append(tray[s][0,2,t][5])
         S.append(tray[s][0,2,t][8])
@@ -54,7 +57,19 @@ vals=(valsA/valsB)
 gasratio=[]
 for em in range(len(T)):
     gasratio.append(T[em]/S[em])
-
+#Running DBSCAN
+    #Note: eps is the maximum distance between points to consider them in a group
+    mpts=0.02
+    mcls=0.15
+    neareps=0.37
+    db = HDBSCAN(cluster_selection_epsilon=neareps, min_samples=round(vals.shape[0]*mpts), min_cluster_size=round(vals.shape[0]*mcls), 
+                 algorithm='brute', store_centers='both').fit(vals)
+    labels = db.labels_
+    medoids = db.medoids_
+    centroids=db.centroids_
+    error=db.probabilities_
+    unique_labels = set(labels)    
+    
 fig, ax = plt.subplot_mosaic("AC;BB")
 fig.set_size_inches(9,12);
 plt.subplots_adjust(top=0.905,
@@ -81,13 +96,20 @@ ax["C"].set_xlabel('EqW {0:.1f}-{1:.1f} $um$'.format(bands[XB][0], bands[XB][1])
 ax["B"].set_ylabel('Scaled EqW {0:.1f}/{1:.1f} $um$'.format(bands[YA][0], bands[YB][0]), fontsize=12);
 ax["B"].set_xlabel('Scaled EqW {0:.1f}/{1:.1f} $um$'.format(bands[XA][0], bands[XB][0]), fontsize=12);
 
+ax["A"].annotate('a)',xy=(0, 1), xycoords='axes fraction', xytext=(+0.5, -0.5), 
+                 textcoords='offset fontsize', fontsize=15, verticalalignment='top')
+ax["B"].annotate('c)',xy=(0, 1), xycoords='axes fraction', xytext=(+0.5, -0.5), 
+                 textcoords='offset fontsize', fontsize=15, verticalalignment='top')
+ax["C"].annotate('b)',xy=(0, 1), xycoords='axes fraction', xytext=(+0.5, -0.5), 
+                 textcoords='offset fontsize', fontsize=15, verticalalignment='top')
+
 ax["B"].scatter(vals[:,0],vals[:, 1], c="k", alpha=0.2, s=50, zorder=1)
 temp=ax["B"].scatter(vals[:,0],vals[:, 1], c=gasratio, s=50, cmap=cmap, zorder=1, norm='log', alpha=0.8)
-ax["B"].scatter(vals[-1,0],vals[-1, 1], c="Magenta", s=55, zorder=10)
+#ax["B"].scatter(vals[-1,0],vals[-1, 1], c="Magenta", s=55, zorder=10)
 
-
-fig.text(x=0.5, y=0.92, s= "Signal Reduction: {0}".format(subres), fontsize=8, ha="center")    
 hic.PareDown(ax["C"], (1.01,1))
-
-plt.colorbar(temp, ax=[ax["A"],ax["B"]], anchor=(1.51,0), shrink=0.45, label="O2/CO2 Concentration (rel. frac.)")
-plt.show()
+label=hic.traycols[13]
+plt.colorbar(temp, ax=[ax["A"],ax["B"]], anchor=(1.51,0), shrink=0.45, label=label+" Ratio")
+fl = hic.StripAlnum(label)
+plt.show()#"""
+fig.savefig("C:/Users/Lyan/StAtmos/HSD/Plots/Metric/Gases/14112024/{0}x{0}_{1}{2}{3}{4}{5}_{6}.png".format(nbands, XA, YA, XB, YB, str(subres), fl))
