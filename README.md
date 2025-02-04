@@ -2,6 +2,9 @@
 
 Reading Between Rainbows (RBR) gathers all the code necessary to reproduce the figures from the eponymous study.
 
+> [!NOTE]
+> This README is under renovation.
+
 All code uses the HicSunt custom function library, which has the following dependencies:
 - astropy.io.fits
 - [CMasher](https://cmasher.readthedocs.io/index.html)
