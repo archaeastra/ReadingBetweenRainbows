@@ -12,6 +12,7 @@ WHAT THIS DOES:
 - divide y/y and x/x
 - show
 """
+
 #UPLOAD TABLE
 nbands=10
 win=(1, 5.3)  #Make sure this is set correctly.
@@ -19,8 +20,11 @@ win=(1, 5.3)  #Make sure this is set correctly.
 #MIRI 5-12 NIRSPEC 1-5.3 | ECLIPS_NIR 1-2 _VIS 0.515-1.03  _NUV 0.2-0.5125
 bands=hic.Bandwidth(win, nbands)
 
-subres=1000
-tray, sims=hic.TrayTable("[YOUR LOCAL PATH HERE]/VPL Transits", bands, subres, win) #1 to 5.3 for NIRSPEC
+subres=None
+ext= '.rfl'
+colu = 3
+#tray, sims=hic.TrayTable("C:/Users/Lyan/StAtmos/HSD/Test/VPL Transits", bands, subres, win) #1 to 5.3 for NIRSPEC
+tray, sims = hic.LoadTray('.rfl', 3, nbands, subres, win)
 
 ##Input
 XA=6
