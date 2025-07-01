@@ -7,6 +7,7 @@ from sklearn.cluster import HDBSCAN
 from sklearn.preprocessing import RobustScaler
 import DBCV as valid
 from collections import Counter
+
 """
 This function code create a multi-regime matrix with a specified overlay and ouputs a .dmv text file with header:
    X Y | DBCV NR  RDP/cluster
@@ -26,144 +27,12 @@ code: int, [0:20]
 display: True/False)
 - outputs a graphic display, or not.
 """
-##CONSTANTS
-ukn=-5 #No. of unknowns in the dataset, a negative number please
-#They *need* to be at the end of the alphabetised Sims list.
-#Just put a Z in front of their name or something.
-
-def GetTEL(name, nbands=10, SNR=5):
-    #Note to Self: Merge GetTEL and LoadTray once it all works.
-
-    telstat=hic.telstat[hic.teltype.index(name)]
-    #this is going to return [*win,RP,RT]
-    #print(telstat)
-    rt=telstat[2]
-    sd=14
-    subres=telstat[1]
-    win=telstat[0]    
-    bands=hic.Bandwidth(telstat[0], nbands)
-    tray, sims = hic.LoadTray(rt, sd, nbands, subres, win, SNR) #Load the correct Tray.
-    return(bands, tray, sims, SNR)
-
-def GetOL(tray, source, code):
-    #print("Fetching Overlay...")
-    if source=="barcode":
-        #print('Overlay type is "barcode".')
-        ol=tray[code]
-        cmap=None
-        if code==0:
-            label=hic.types[ol]
-            c=hic.colours[ol]
-            marker=hic.markers[ol%(len(hic.markers))]
-        elif code==1:
-            label=hic.clouds[ol]
-            c=hic.cldcol[ol]
-            marker='D'
-        elif code==2:
-            label=hic.spectype[ol]
-            c=hic.spcol[ol]
-            marker='*'
-        else:
-            sys.exit("Code {0} not valid. \n Correct values are: Atmospheres (0), Clouds (1), Spectral Types (2).".format(code))
-    if source=="prior":
-        #print('Overlay type is "prior".')
-        #print("tray", tray)
-        if code>20: sys.exit("Code {0} out of range. Valid codes are:".format(code) +
-                             "\n0: Temperature, 1: T_eff, 2: Flux, 3: SemJ, 4: R, 5: P" +
-                             "\n6: O2, 7: H2O, 8: CO, 9: CO2, 10: O3, 11: N2, 12: CH4 | Bottom of Atmosphere" +
-                             "\n13: O2.1, 14: H2O.1, 15: CO.1, 16: CO2.1, 17: O3.1, 18: N2.1, 19: CH4.1 |Top of Atmosphere"
-                             "\n20: O2/CO2")
-        elif code==20: #Will only do O2/CO2
-            ol=tray[6]/tray[9]
-        else:
-            ol=tray[code]
-        label=str(ol)#hic.traycols[code]
-        c=ol
-        cmap=None
-        marker='o'
-    
-    return(np.array([ol, label, c, marker, cmap])) #cmap is empty. It is also loadbearing. I don't understand either
-    
-
-def RDBSM (A, B, ukn, overlist="arch", code=0, display=False):
-    #First, go fetch the trays and store their data.
-    bandsA, TrayA, simsA, SNRA  = hic.GetTEL(A)
-    bandsB, TrayB, simsB, SNRB = hic.GetTEL(B)
-    
-    ##HEALTH CHECK FUNCTIONS##
-    if len(TrayA)!=len(TrayB): sys.exit("Trays are not the same size, please check your sample population.")
-    if ukn>0: ukn = ukn*-1
-    ##If these fail, something is wrong and the program won't try to run. 
-    #So fix these issues first, then the rest can run and waste your time in a different way
-    
-    noA=len(bandsA) #x, vertical
-    noB=len(bandsB) #y, horizontal 
-    
-    if display==True:
-        fig, ax = plt.subplots(noA,noB, subplot_kw=dict(box_aspect=1));
-        fig.set_size_inches(8,8);
-        plt.subplots_adjust(top=0.9, bottom=0.1, left=0.1, right=0.9, hspace=0.265, wspace=0.175)
-    
-    validity=np.zeros((noA,noB,3), dtype='object') #a place to store the validity calculations
-    print('Calculations in Progress. Please wait...')
-
-    for v in range(0,noA):
-        print("  Current Row: {0}/{1}".format(v, noA))
-        if display==True:
-            ax[v,0].set_ylabel("{0:.2f}-\n{1:.2f} $um$".format(bandsA[v][0], bandsA[v][1], fontsize=2));
-            ax[v,noA-1].yaxis.set_label_position("right")
-            ax[v,noA-1].set_ylabel(v, fontsize=15, rotation=0, labelpad=10)
-
-        for h in range(0,noB):
-            if display==True:
-                ax[noB-1,h].set_xlabel("{0:.2f}-\n{1:.2f} $um$".format(bandsB[h][0], bandsB[h][1], fontsize=2));
-                ax[0,h].tick_params(top=True, labeltop=True, bottom=False, labelbottom=False)
-                ax[0,h].set_title(h, fontsize=15)
-        
-                ax[v,h].set_xticks([])
-                ax[v,h].set_yticks([])
-            if v<=h:
-                if display==True:
-                    ax[v,h].set_facecolor('k')
-                    ax[v,h].set_xticks([])
-                    ax[v,h].set_yticks([])
-                pass #skip diagonal and transposed cells to save time and energy
-            else:
-                #Sample the trays
-                vA=[]
-                hB=[]
-                if display==True: 
-                    overlay=np.zeros((1,4), dtype='object')
-                else:
-                    overlay=[]
-
-                for s in range(0,len(TrayA)):#for star in tray
-                    #both trays Should be the same size
-                    for p in range(0,TrayA[s].shape[2]): #for atm in planet
-                        vA.append(TrayA[s][v,0,p]) #[star][band, "area", atm] 
-                        hB.append(TrayB[s][h,0,p])
-                        
-                        if overlist in ["arch", "spec", "clouds", "bar"]:
-                            if display==True: 
-                                overlay=np.row_stack((overlay,GetOL(TrayA[s][0,1,p], "barcode", code)[:-1]))
-                            else:
-                                overlay.append(GetOL(TrayA[s][0,1,p], "barcode", code)[0]) #(data, label, colour, marker, cmap)
-                                
-                        elif overlist=="atlas":
-                            #print("atlas", TrayA[s][0,2,p])
-                            if display==True: 
-                                overlay=np.row_stack((overlay,GetOL(TrayA[s][0,2,p], "prior", code)[:-1]))
-                            else:
-                                overlay.append(GetOL(TrayA[s][0,2,p], "prior", code)[0])
-
-                        else:
-                            sys.exit("{0} is an invalid overlay.".format(overlist)+
                                      "\nValid lists are: arch, spec, clouds and atlas")
                 #Store samples and prevent algorithmic indigestion
                 
                 vals= np.column_stack((vA, hB))
                 vals= RobustScaler().fit_transform(vals)
-                if display==True: overlay=np.delete(overlay,0,0)
+                overlay=np.delete(overlay,0,0)
                 
                 #sys.exit("check overlay")
                 if display==True:
@@ -220,32 +89,55 @@ def RDBSM (A, B, ukn, overlist="arch", code=0, display=False):
                             ax[v,h].fill(ctr[0], ctr[1], '--', c=col, alpha=0.4, zorder=1) 
 
                         try:
-                            eval=(sd/mn)*100 
-                            score.append("{0:.2f}%".format(eval))
+                            score.append((sd/mn)*100) 
+                            #score.append("{0:.2f}".format(sdmn))
                         except:
-                            score.append("0%")
+                            score.append(0)
                 cv = valid.DBCV(vals, labels)
                 validity[v,h,0]= cv if np.isfinite(cv) else 1
                 try: 
                     validity[v,h,1] = (nr/vals.shape[0])*10 
                 except: 
                     validity[v,h,1] = 0
-                validity[v,h,2]=score
-
+                #print(score)
+                try:
+                    validity[v,h,2]=np.min(score)
+                    validity[v,h,3]=np.average(score)
+                except:
+                    pass
                 #Saving to file                
-                dmvf='C:/Users/Lyan/StAtmos/HSD/Test/Trays/Multi/{0}{1}v{2}{3}_S{4}-{5}{6}.dmv'.format(A,noA,B,noB,SNRA,overlist,code)
-                with open(dmvf, 'a') as dmv:
-                    if v==1 and h==0: print("#X Y | DBCV NR  RDP/cluster ({0}{1})".format(overlist, code), file=dmv)
-                    if -0.4<validity[v,h,0]<0.2 and validity[v,h,1]<1:
-                        print(v,h,str("| {0:.2f} {1:.2f} {2}".format(validity[v,h,0],validity[v,h,1], ', '.join(validity[v,h,2]))), file=dmv)
-                
+                if outfile==True:
+                    with open(dmvf, 'a') as dmv:
+                        if v==1 and h==0: print("#X Y | DBCV NR  Ave.RDP  Min.RDP - ({0}{1})".format(overlist, code), file=dmv)
+                        if -0.4<validity[v,h,0]<0.2 and validity[v,h,1]<1:
+                            print(v,h,str("| {0:.2f} {1:.2f} {2:.2f} {3:.2f}".format(validity[v,h,0],validity[v,h,1],validity[v,h,3], 
+                                                                                 validity[v,h,2])), file=dmv)
+                                                         #', '.join(validity[v,h,2]))), file=dmv)
     if display==True: 
         fig.suptitle("MASCMulti {0}{1}v{2}{3}_S{4}-{5}{6}".format(A,noA,B,noB,SNRA,overlist,code));
         plt.show()
     return(dmvf)
 
-sel=hic.SelectCell(RDBSM("NIRSpec", "ECLIPS-VIS", 5, 'bar', code=0, display=True))
-modal=(Counter(sel[1][:,0])+Counter(sel[1][:,1])).most_common(2)
-print("Program Conclusion, check verbose output file.")
-print("Redux Results: " +
-      "\nIdeal Cell: ({0:.0f},{1:.0f})".format(sel[1][0,0], sel[1][0,1]))
+def Redux(select, numcells=None):
+    #select=hic.SelectCell(RDBSM("NIRSpec", "ECLIPS-VIS", 5, 'bar', code=1, display=False))
+    #modal=(Counter(sel[:,0])+Counter(sel[:,1])).most_common(2)
+    if isinstance(numcells, int)!=True: numcells=select.shape[0]
+    modeA=Counter(select[:,0]).most_common(2)
+    modeB=Counter(select[:,1]).most_common(2)
+    #print("Redux Results: ")
+    ideal=[]
+    modal=[]
+    for num in range(numcells):
+        ideal.append("({0:.0f},{1:.0f})".format(select[num,0], select[num,1]))
+    for i in range(2):
+        modal.append("{0:.0f}, {1:.0f}".format(modeA[i][0], modeB[i][0]))
+    return(', '.join(ideal), '; '.join(modal))    
+
+def RDPPull(dmvf):
+    #rdp = ak.Array(dmvf)
+    rdp= np.genfromtxt(dmvf, dtype='float', comments='#', delimiter=" ", usecols= (0,1,5,6), missing_values="", filling_values="nan")
+    mavindex = np.argmin(rdp[:,2]) 
+    mindex = np.argmin(rdp[:,3])
+    #print(mindex)
+    #return("Min.RDP {0} @({1:.0f},{2:.0f})".format(rdp[mindex,2],rdp[mindex,0],rdp[mindex,1]))
+    return(rdp[mindex,2],(int(rdp[mavindex,0]),int(rdp[mavindex,1])), rdp[mindex,3],(int(rdp[mindex,0]),int(rdp[mindex,1]))) #returns (mav, (x,y), min, (x,y))
