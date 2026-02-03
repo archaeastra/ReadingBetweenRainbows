@@ -28,17 +28,17 @@ hr=False
 nbands=10
 SNR=5
 flag="RL2"
-CTRLList=["C:/Users/Lyan/StAtmos/HSD/Test/Other Transits"]
-MCList=[]#"C:/Users/Lyan/StAtmos/HSD/Test/MC Spectra/GReducing", "C:/Users/Lyan/StAtmos/HSD/Test/MC Spectra/GOxic"]
-INARAList=[]#"C:/Users/Lyan/StAtmos/HSD/Test/INARA Spectra/Earth", "C:/Users/Lyan/StAtmos/HSD/Test/INARA Spectra/Venus", "C:/Users/Lyan/StAtmos/HSD/Test/INARA Spectra/Mars"]
-RLList=['C:/Users/Lyan/StAtmos/HSD/JWSTData/MAST_2024-07-10T0954/JWST/jw06456-o001_t001_nirspec_clear-prism-sub512/jw06456-o001_t001_nirspec_clear-prism-sub512_x1dints.fits', 'C:/Users/Lyan/StAtmos/HSD/JWSTData/MAST_2024-07-16T0720/JWST/jw02589-o006_t001_nirspec_clear-prism-sub512/jw02589-o006_t001_nirspec_clear-prism-sub512_x1dints.fits']
+CTRLList=["PATHS TO VPLSE-LIKE REAL DATA. FOLDER OF FOLDERS"]
+INARAList=["PATHS TO INARA DATASETS. FOLDERS OF FOLDERS]
+MCList=["PATHS TO MONTE CARLO DATASETS. FOLDER OF FOLDERS LIKE INARA"]
+RLList=["PATHS TO FITS FILES FROM MAST"]
 GenList=MCList+INARAList
 
 #UPLOAD TABLE
 #Pull in the Tray
 # The tray is a list of the hold[x=band*s*, y=area|barcode|MRs, z=atmosphere*s*] per sim
 rt, seed, subres, win, bands=hic.GetTEL("NIRISS", nbands)
-tray, sims=hic.TrayTable("C:/Users/Lyan/StAtmos/HSD/Test/VPL Transits", rt, seed, bands, subres, win, SNR, source="VPLSE")
+tray, sims=hic.TrayTable("[LOCAL PATH]/VPL Transits", rt, seed, bands, subres, win, SNR, source="VPLSE")
 #tray, sims=hic.TrayTable("C:/Users/Lyan/StAtmos/HSD/Test/MC Spectra/GOxic", rt, seed, bands, subres, win, SNR, source="INARA")
 for path in CTRLList:
     ctray, csims=hic.TrayTable(path, rt, seed, bands, subres, win, SNR, source="VPLSE")
@@ -72,11 +72,11 @@ for path in RLList:
 print('Import Successful')
 
 #Save the Tray in files
-np.save('C:/Users/Lyan/StAtmos/HSD/Test/Trays/RBR/{0}-{1}x{2}_{3}({4}){5}S{6}{7}.npy'.format(win[0], win[1], nbands, rt, seed, subres, SNR, flag), tray)#, fmt='%s')
+np.save('[LOCAL PATH]/Trays/RBR/{0}-{1}x{2}_{3}({4}){5}S{6}{7}.npy'.format(win[0], win[1], nbands, rt, seed, subres, SNR, flag), tray)#, fmt='%s')
 if hr==True:
-    np.savetxt('C:/Users/Lyan/StAtmos/HSD/Test/Trays/RBR/{0}-{1}x{2}_{3}({4}){5}S{6}{7}.masc'.format(win[0], win[1], nbands, rt, seed, subres, SNR, flag), tray, fmt='%s')
+    np.savetxt('[LOCAL PATH]/Trays/RBR/{0}-{1}x{2}_{3}({4}){5}S{6}{7}.masc'.format(win[0], win[1], nbands, rt, seed, subres, SNR, flag), tray, fmt='%s')
 else:
     pass
-np.save('C:/Users/Lyan/StAtmos/HSD/Test/Trays/Imprint{0}{1}.npy'.format(rt, flag), sims)
-np.savetxt('C:/Users/Lyan/StAtmos/HSD/Test/Trays/Imprint{0}{1}.sims'.format(rt, flag), sims, fmt='%s')
+np.save('[LOCAL PATH]/Trays/Imprint{0}{1}.npy'.format(rt, flag), sims)
+np.savetxt('[LOCAL PATH]/Trays/Imprint{0}{1}.sims'.format(rt, flag), sims, fmt='%s')
 print('File Saved')
