@@ -27,7 +27,84 @@ code: int, [0:20]
 display: True/False)
 - outputs a graphic display, or not.
 """
-                                     "\nValid lists are: arch, spec, clouds and atlas")
+
+def RDBSM(A, B, ukn, SNR, flag=None, overlist="bar", code=0, display=False, verbose=True, outfile=True):
+    #First, go fetch the trays and store their data.
+    bandsA, TrayA, simsA, SNRA, rt  = hic.GetTRAY(A, flag, SNR=SNR)
+    bandsB, TrayB = hic.GetTRAY(B, flag, SNR=SNR)[:2]
+
+    
+    ##HEALTH CHECK FUNCTIONS##
+    if len(TrayA)!=len(TrayB): sys.exit("Trays are not the same size, please check your sample population.")
+    if ukn>0: ukn = ukn*-1
+    if overlist=="bar" and code>3: sys.exit("Code {0} not valid.".format(code) +
+                                            "\nCorrect values are: Atmospheres (0), Clouds (1), Spectral Types (2).")
+    if overlist not in ["bar", "spec", "clouds", "atlas", "arch", "archetype"]!=True:
+        sys.exit("{0} is an invalid overlay.".format(overlist)+
+                 "\nValid lists are: arch, spec, clouds, bar and atlas")
+
+    ##If these fail, something is wrong and the program won't try to run. 
+    #So fix these issues first, then the rest can run and waste your time in a different way
+    
+    noA=len(bandsA) #x, vertical
+    noB=len(bandsB) #y, horizontal 
+    dmvf='C:/Users/Lyan/StAtmos/HSD/Test/Trays/Multi/RBR{7}/{0}{1}v{2}{3}_S{4}-{5}{6}.dmv'.format(A,noA,B,noB,SNRA,overlist,code,flag)
+    if outfile==True:
+        try:
+            open(dmvf, 'w').close() #make sure it's empty before writing to it
+        except:
+            os.makedirs("C:/Users/Lyan/StAtmos/HSD/Test/Trays/Multi/RBR{0}".format(flag), exist_ok = True)
+    
+    if display==True:
+        fig, ax = plt.subplots(noA,noB, subplot_kw=dict(box_aspect=1));
+        fig.set_size_inches(7,7);
+        plt.subplots_adjust(top=0.9, bottom=0.1, left=0.1, right=0.9, hspace=0.265, wspace=0.175)
+    
+    validity=np.zeros((noA,noB,4), dtype='object') #a place to store the validity calculations
+    print('Calculations in Progress. Please wait...')
+
+    for v in range(0,noA):
+        if verbose==True: print("  Current Row: {0}/{1}".format(v, noA))
+        if display==True:
+            ax[v,0].set_ylabel("{0:.2f}-\n{1:.2f} $um$".format(bandsA[v][0], bandsA[v][1], fontsize=2));
+            ax[v,noA-1].yaxis.set_label_position("right")
+            ax[v,noA-1].set_ylabel(v, fontsize=15, rotation=0, labelpad=10)
+
+        for h in range(0,noB):
+            if display==True:
+                ax[noB-1,h].set_xlabel("{0:.2f}-\n{1:.2f} $um$".format(bandsB[h][0], bandsB[h][1], fontsize=2));
+                ax[0,h].tick_params(top=True, labeltop=True, bottom=False, labelbottom=False)
+                ax[0,h].set_title(h, fontsize=15)
+        
+                ax[v,h].set_xticks([])
+                ax[v,h].set_yticks([])
+            if A==B and v<=h:
+                if display==True:
+                    ax[v,h].set_facecolor('k')
+                    ax[v,h].set_xticks([])
+                    ax[v,h].set_yticks([])
+                pass #skip diagonal and transposed cells to save time and energy
+            else:               
+                #Sample the trays
+                vA=[]
+                hB=[]
+                overlay=np.zeros((1,4), dtype='object')
+
+                for s in range(0,len(TrayA)):#for star in tray
+                    #both trays Should be the same size
+                    for p in range(0,TrayA[s].shape[2]): #for atm in planet
+                        vA.append(TrayA[s][v,0,p]) #[star][band, "area", atm] 
+                        hB.append(TrayB[s][h,0,p])
+                        
+                        if overlist in ["bar", "spec", "clouds"]:
+                            overlay=np.row_stack((overlay,hic.GetOL(TrayA[s][0,1,p], "barcode", code)[:-1]))                    
+                        elif overlist=="atlas":
+                            overlay=np.row_stack((overlay,hic.GetOL(TrayA[s][0,2,p], "prior", code)[:-1]))
+                        elif overlist=="arch" or "archetype":
+                            overlay=np.row_stack((overlay,hic.GetOL(TrayA[s][0,1,p], "archetype", 0)[:-1]))                
+                        else:
+                            sys.exit("{0} is an invalid overlay.".format(overlist)+
+                                     "\nValid lists are: arch, spec, clouds, bar and atlas")
                 #Store samples and prevent algorithmic indigestion
                 
                 vals= np.column_stack((vA, hB))
@@ -36,6 +113,10 @@ display: True/False)
                 
                 #sys.exit("check overlay")
                 if display==True:
+                    if A!=B and v==h:
+                        ax[v,h].patch.set_edgecolor('black')
+                        ax[v,h].patch.set_linewidth(2) 
+                        
                     if overlist in ["arch", "spec", "clouds", "bar"]:
                         for w in range(0,len(overlay)+ukn): #Main Run
                             ax[v,h].scatter(vals[w,0],vals[w, 1], s=15,
@@ -60,6 +141,8 @@ display: True/False)
                             ax[v,h].scatter(vals[:,0],vals[:, 1], s=15,
                                             c=overlay[:,0], cmap=cmap, marker=overlay[0,3], zorder=5)
 
+
+            
                 #Running DBSCAN
                 mpts=0.02
                 mcls=0.15
@@ -89,7 +172,7 @@ display: True/False)
                             ax[v,h].fill(ctr[0], ctr[1], '--', c=col, alpha=0.4, zorder=1) 
 
                         try:
-                            score.append((sd/mn)*100) 
+                            score.append((sd/mn)*100)
                             #score.append("{0:.2f}".format(sdmn))
                         except:
                             score.append(0)
@@ -113,12 +196,17 @@ display: True/False)
                             print(v,h,str("| {0:.2f} {1:.2f} {2:.2f} {3:.2f}".format(validity[v,h,0],validity[v,h,1],validity[v,h,3], 
                                                                                  validity[v,h,2])), file=dmv)
                                                          #', '.join(validity[v,h,2]))), file=dmv)
+                    
     if display==True: 
+        if verbose == True:
+            print(hic.SelectCell(dmvf, 10, verbose=True))
         fig.suptitle("MASCMulti {0}{1}v{2}{3}_S{4}-{5}{6}".format(A,noA,B,noB,SNRA,overlist,code));
         plt.show()
     return(dmvf)
 
-def Redux(select, numcells=None):
+def Redux(select, numcells=None, excludenan=True):
+    if excludenan==True:
+        select = select[~np.isnan(select).any(axis=1)]    
     #select=hic.SelectCell(RDBSM("NIRSpec", "ECLIPS-VIS", 5, 'bar', code=1, display=False))
     #modal=(Counter(sel[:,0])+Counter(sel[:,1])).most_common(2)
     if isinstance(numcells, int)!=True: numcells=select.shape[0]
@@ -129,15 +217,24 @@ def Redux(select, numcells=None):
     modal=[]
     for num in range(numcells):
         ideal.append("({0:.0f},{1:.0f})".format(select[num,0], select[num,1]))
-    for i in range(2):
-        modal.append("{0:.0f}, {1:.0f}".format(modeA[i][0], modeB[i][0]))
+    for i in range(0,2):
+        try: modal.append("{0:.0f}, {1:.0f}".format(modeA[i][0], modeB[i][0]))
+        except: modal.append("X")
     return(', '.join(ideal), '; '.join(modal))    
 
-def RDPPull(dmvf):
+def RDPPull(dmvf, excludenan=True):
     #rdp = ak.Array(dmvf)
     rdp= np.genfromtxt(dmvf, dtype='float', comments='#', delimiter=" ", usecols= (0,1,5,6), missing_values="", filling_values="nan")
-    mavindex = np.argmin(rdp[:,2]) 
-    mindex = np.argmin(rdp[:,3])
+    if excludenan==True:
+        rdp = rdp[~np.isnan(rdp).any(axis=1)]    
+    try:
+        mavindex = np.argmin(rdp[:,2]) 
+        mindex = np.argmin(rdp[:,3])
+    except:
+        print("no")
+        pass
     #print(mindex)
     #return("Min.RDP {0} @({1:.0f},{2:.0f})".format(rdp[mindex,2],rdp[mindex,0],rdp[mindex,1]))
-    return(rdp[mindex,2],(int(rdp[mavindex,0]),int(rdp[mavindex,1])), rdp[mindex,3],(int(rdp[mindex,0]),int(rdp[mindex,1]))) #returns (mav, (x,y), min, (x,y))
+    return(rdp[mindex,2],(int(rdp[mavindex,0]),int(rdp[mavindex,1])), rdp[mindex,3],(int(rdp[mindex,0]),int(rdp[mindex,1]))) 
+    #returns (mav, (x,y), min, (x,y))
+
