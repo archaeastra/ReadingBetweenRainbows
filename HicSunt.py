@@ -380,7 +380,6 @@ def TrayTable(path, rt, sd, bands, subres=None, win=(5,12), SNR=None, source="VP
                 y, xt = Window(x, A, tup) #isolate band from spectrum
                 #ct = np.column_stack((y, xt))
                 #print('y', y[0], y[-1], 'xt', xt[0], xt[-1])
-                #np.savetxt('C:/Users/Lyan/StAtmos/yxttst.out', ct, fmt='%s') #ct was used to find albedo nan discontinuity
                 ar = np.trapz(y, xt) #calculate area
                 #print(tup, ' ar', ar)
                 hold[bands.index(tup),0,i]=ar #store area in bandx-0thy-ithz
@@ -397,9 +396,9 @@ def LoadTray(rt, sd, bands, subres, win, SNR):
     # Here for back-compatibility, use GetTRAY instead
     warnings.warn("\nDeprecated for v.1, use GetTRAY.")
     try:
-        tray = np.load('C:/Users/Lyan/StAtmos/HSD/Test/Trays/BBProv/{0}-{1}x{2}_{3}({4}){5}S{6}B.npy'.format(win[0], win[1], bands, rt, sd, subres, SNR), 
+        tray = np.load('[LOCAL PATH]/Trays/BBProv/{0}-{1}x{2}_{3}({4}){5}S{6}B.npy'.format(win[0], win[1], bands, rt, sd, subres, SNR), 
                allow_pickle=True)
-        sims = np.genfromtxt('C:/Users/Lyan/StAtmos/HSD/Test/Trays/VPLSE.sims', dtype='str', delimiter=',', comments='#') 
+        sims = np.genfromtxt('[LOCAL PATH]/Trays/VPLSE.sims', dtype='str', delimiter=',', comments='#') 
     except FileNotFoundError:
         sys.exit(".npy file for not found. Please run TrayTable first.")
     print('Tray Loaded')
@@ -420,13 +419,12 @@ def GetTRAY(name, addon='', nbands=10, SNR=5):
     #the addon flag is for the various suffixes I separate my runs with
     #It's added in TrayTable and picked up here again for ease of use
     rt, sd, subres, win, bands=GetTEL(name, nbands)
-    #print('C:/Users/Lyan/StAtmos/HSD/Test/Trays/TIN/{0}-{1}x{2}_{3}({4}){5}S{6}{7}.npy'.format(win[0], win[1], nbands, rt, sd, subres, SNR, addon))
     try:
-        tray = np.load('C:/Users/Lyan/StAtmos/HSD/Test/Trays/RBR/{0}-{1}x{2}_{3}({4}){5}S{6}{7}.npy'.format(win[0], win[1], nbands, rt, sd, subres, SNR, addon), 
+        tray = np.load('[LOCAL PATH]/Trays/RBR/{0}-{1}x{2}_{3}({4}){5}S{6}{7}.npy'.format(win[0], win[1], nbands, rt, sd, subres, SNR, addon), 
                allow_pickle=True)
         if rt=="TRN": plus=''
         elif rt=="RFL":plus=""#+INARA"
-        sims = np.genfromtxt('C:/Users/Lyan/StAtmos/HSD/Test/Trays/VPLSE{0}.sims'.format(plus), dtype='str', delimiter=',', comments='#') 
+        sims = np.genfromtxt('[LOCAL PATH]/Trays/VPLSE{0}.sims'.format(plus), dtype='str', delimiter=',', comments='#') 
     except FileNotFoundError:
         print(tray)
         sys.exit(".npy file for {0} not found. Please run TrayTable first.".format(name))
